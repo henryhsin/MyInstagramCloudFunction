@@ -11,37 +11,45 @@ exports.helloWorld = functions.https.onRequest((request, response) => {
 });
 
 exports.sendPushNotification = functions.https.onRequest((req, res) => {
-    res.send('Attemp to push notification!!!');
+    res.send('Attemp to push notification...');
+    var uid = 'eFRkzhk6SsSuYSuqyJKNj0z35EV2';
+    var dbRef = admin.database().ref('/users/' + uid);
+    return dbRef.once('value', function (snapshot) {
+        var user = snapshot.val();
+        console.log("user: " + user);
+        console.log("User name: " + user.userName + ", fcmTocken: " + user.fcmTocken);
+        // This registration token comes from the client FCM SDKs.
+        var fcmTocken = user.fcmTocken;
 
-    // This registration token comes from the client FCM SDKs.
-    var fcmTocken = "fcADyUadmTo:APA91bHez-ZoaAqR-xRsUSpGCM-1pJ9xyfTpJ2liy2ozqg2QlNAc8oZeWrvlBs_zxcPWfgutzK_WFsHEcGMGzyhKQ1dIsWKOeUAM7ckMx4KvKqbubToSgE2VmvJy7ZbNyype-yRNWuPp";
+        // See the "Defining the message payload" section below for details
+        // on how to define a message payload.
+        var payload = {
+            notification: {
+                title: 'put title here...',
+                body: 'put body here...'
+            },
+            data: {
+                score: "850",
+                time: "2:45"
+            }
+        };
 
-    // This registration token comes from the client FCM SDKs.
+        // Send a message to the device corresponding to the provided
+        // registration token.
+        admin.messaging().sendToDevice(fcmTocken, payload)
+            .then(function (response) {
+                // See the MessagingDevicesResponse reference documentation for
+                // the contents of response.
+                console.log("Successfully sent message:", response);
+            })
+            .catch(function (error) {
+                console.log("Error sending message:", error);
+            });
 
-    // See the "Defining the message payload" section below for details
-    // on how to define a message payload.
-    var payload = {
-        notification: {
-            title: 'push title here...',
-            body: 'push body here...'
-        },
-        data: {
-            score: "850",
-            time: "2:45"
-        }
-    };
 
-    // Send a message to the device corresponding to the provided
-    // registration token.
-    admin.messaging().sendToDevice(fcmTocken, payload)
-        .then(function (response) {
-            // See the MessagingDevicesResponse reference documentation for
-            // the contents of response.
-            console.log("Successfully sent message:", response);
-        })
-        .catch(function (error) {
-            console.log("Error sending message:", error);
-        });
+
+    });
+
 });
 
 
